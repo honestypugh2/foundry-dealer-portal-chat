@@ -155,3 +155,7 @@ src/content_understanding/
 local.settings.json
 
 tests/*.json
+
+document-mappings.md
+
+future-state-architecture.md

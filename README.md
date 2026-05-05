@@ -1,22 +1,225 @@
 # Company Dealer Portal — AI-Powered Technical Support
 
-> **Proof of Concept** — An AI-powered dealer support chatbot that answers technical questions about Company trailer maintenance using Retrieval-Augmented Generation (RAG) grounded in 9 authoritative service documents.
+> **Proof of Concept** — An AI-powered dealer support chatbot that answers technical questions about Company trailer maintenance using Retrieval-Augmented Generation (RAG) grounded in 9 authoritative service documents. The default agent uses **Azure AI Foundry Agent Service** with agentic retrieval.
 
 ---
 
 ## Table of Contents
 
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Environment Variables](#environment-variables)
+- [Infrastructure Deployment (azd)](#infrastructure-deployment-azd)
 - [Architecture Overview](#architecture-overview)
 - [Repository Structure](#repository-structure)
 - [Azure Services](#azure-services)
-- [Quick Start (Demo Mode)](#quick-start-demo-mode)
+- [Demo Mode (No Azure Required)](#demo-mode-no-azure-required)
 - [Sample Queries](#sample-queries)
 - [Demo vs Future Architecture](#demo-vs-future-architecture)
-- [Infrastructure Deployment](#infrastructure-deployment)
 - [Document Indexing](#document-indexing)
 - [API Reference](#api-reference)
 - [Testing](#testing)
-- [Configuration](#configuration)
+
+---
+
+## Prerequisites
+
+| Tool | Version | Purpose |
+|------|---------|---------|
+| Python | 3.11+ | FastAPI backend + indexer |
+| Node.js | 20+ | React frontend (Vite dev server) |
+| npm | 10+ | Frontend dependency management |
+| Azure CLI | 2.60+ | Authentication and resource management |
+| Azure Developer CLI (`azd`) | latest | Infrastructure provisioning and deployment |
+| Docker | 24+ | (Optional) Container builds for App Service |
+
+**Azure Subscription Requirements:**
+
+- An active Azure subscription with Owner or Contributor + User Access Administrator roles
+- Azure AI Foundry project (with AI Services endpoint)
+- Azure OpenAI model deployments (`gpt-4.1-mini` for chat, `text-embedding-3-large` for embeddings)
+- Azure AI Search service (Basic SKU or higher)
+- Azure Blob Storage account (for document source)
+
+**Required RBAC Roles** (on your AI Services resource):
+
+| Role | Purpose |
+|------|---------|
+| Cognitive Services OpenAI User | Model inference |
+| Search Index Data Reader | Querying the search index |
+| Search Service Contributor | Managing agentic retrieval knowledge base |
+
+---
+
+## Quick Start
+
+The fastest path to running locally with Azure AI Foundry Agent Service:
+
+### 1. Provision Infrastructure
+
+```bash
+az login
+azd auth login
+azd init
+azd up
+```
+
+This deploys all required Azure resources (AI Search, OpenAI, Storage, Key Vault, Monitoring) using the Bicep templates in `infra/`.
+
+### 2. Install Dependencies
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r src/api/requirements.txt
+pip install -r src/indexer/requirements.txt
+
+cd src/frontend && npm install && cd ../..
+```
+
+### 3. Configure Environment
+
+Create a `.env` file in the repo root (gitignored):
+
+```bash
+# Core mode settings
+SIMULATED_MODE=false
+AGENT_SERVICE=foundry
+AGENTIC_RETRIEVAL_ENABLED=true
+
+# Azure AI Foundry
+AZURE_AI_PROJECT_ENDPOINT=https://<your-ai-services>.services.ai.azure.com/api/projects/<your-project>
+
+# Azure OpenAI
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1-mini
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
+
+# Azure AI Search
+AZURE_SEARCH_ENDPOINT=https://<your-search>.search.windows.net
+AZURE_SEARCH_INDEX_NAME=dealer-portal-docs
+AZURE_SEARCH_API_KEY=<your-search-admin-key>
+
+# Agent persistence (avoids re-creation cost between requests)
+PERSIST_FOUNDRY_AGENTS=true
+```
+
+### 4. Index Documents & Start
+
+```bash
+# Index documents into Azure AI Search
+source .venv/bin/activate
+cd src && python -m indexer.index_documents && cd ..
+
+# Start both backend and frontend
+./start.sh
+```
+
+The app is now available at:
+- **Frontend:** http://localhost:5173
+- **Backend API:** http://localhost:8000
+- **Swagger UI:** http://localhost:8000/docs
+
+For the full local development workflow (manual start, debugging, testing), see the [Development Guide](docs/development-guide.md).
+
+---
+
+## Environment Variables
+
+All configuration is managed via environment variables (loaded from `.env`). The defaults below are configured for **Foundry Agent** mode:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `SIMULATED_MODE` | Use simulated backends (no Azure needed) | `false` |
+| `AGENT_SERVICE` | Agent implementation: `foundry` or `agent_framework` | `foundry` |
+| `AGENTIC_RETRIEVAL_ENABLED` | Enable knowledge base + MCP agentic retrieval | `true` |
+| `AZURE_AI_PROJECT_ENDPOINT` | Azure AI Foundry project endpoint | *(required)* |
+| `AZURE_OPENAI_DEPLOYMENT` | Chat model deployment name | `gpt-4.1-mini` |
+| `AZURE_OPENAI_EMBEDDING_DEPLOYMENT` | Embedding model deployment | `text-embedding-3-large` |
+| `AZURE_OPENAI_KB_MODEL_DEPLOYMENT` | Knowledge base reasoning model | `gpt-4.1-mini` |
+| `AZURE_SEARCH_ENDPOINT` | Azure AI Search service endpoint | *(required)* |
+| `AZURE_SEARCH_INDEX_NAME` | Search index name | `dealer-portal-docs` |
+| `AZURE_SEARCH_API_KEY` | Search admin key (or use managed identity) | *(required)* |
+| `AI_SEARCH_PROJECT_CONNECTION_ID` | Foundry project connection ID for search | *(auto-detected)* |
+| `AI_SEARCH_QUERY_TYPE` | Query type: `simple`, `semantic` | `semantic` |
+| `MCP_PROJECT_CONNECTION_NAME` | MCP connection for agentic retrieval | `dealer-knowledge-mcp-connection` |
+| `PERSIST_FOUNDRY_AGENTS` | Reuse agents across requests | `true` |
+| `MAX_CITATIONS` | Max citations returned per response | `5` |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `http://localhost:5173` |
+| `APP_ENV` | Environment label | `development` |
+
+> **Simulated mode:** Set `SIMULATED_MODE=true` to run without any Azure credentials. The chatbot uses pre-indexed chunks and simulated responses for demonstration purposes.
+
+---
+
+## Infrastructure Deployment (azd)
+
+The project uses [Azure Developer CLI (`azd`)](https://learn.microsoft.com/azure/developer/azure-developer-cli/) with Bicep templates for infrastructure-as-code.
+
+### First-Time Setup
+
+```bash
+# Install azd (if not already installed)
+curl -fsSL https://aka.ms/install-azd.sh | bash
+
+# Login
+az login
+azd auth login
+
+# Initialize the project (uses azure.yaml)
+azd init
+
+# Provision infrastructure + deploy app
+azd up
+```
+
+### Deploy Dev Environment (No APIM)
+
+```bash
+azd up --environment dev
+```
+
+This uses `infra/parameters/dev.bicepparam` which deploys:
+- Azure AI Search (Basic SKU)
+- Azure OpenAI (gpt-4.1-mini + text-embedding-3-large)
+- Azure Blob Storage
+- Azure Key Vault
+- Application Insights + Log Analytics
+
+### Deploy Production (With APIM)
+
+```bash
+azd up --environment prod
+```
+
+Uses `infra/parameters/prod.bicepparam` with additional:
+- Azure API Management (AI Gateway policies, JWT validation, rate limiting)
+- Higher SKU tiers and replica counts
+
+### Manual Bicep Deployment (Alternative)
+
+```bash
+# Dev
+az deployment group create \
+  --resource-group rg-company-dealer-dev \
+  --template-file infra/main.bicep \
+  --parameters infra/parameters/dev.bicepparam
+
+# Prod
+az deployment group create \
+  --resource-group rg-company-dealer-prod \
+  --template-file infra/main.bicep \
+  --parameters infra/parameters/prod.bicepparam
+```
+
+### Deploy App Code to App Service
+
+```bash
+az webapp up \
+  --name app-company-dealer-dev \
+  --resource-group rg-company-dealer-dev \
+  --runtime "PYTHON:3.11" \
+  --src-path src/api
+```
 
 ---
 
@@ -174,68 +377,9 @@ dealer-portal-exp/
 
 ---
 
-## Quick Start (Demo Mode)
+## Demo Mode (No Azure Required)
 
-### Prerequisites
-
-- Python 3.11+
-- Node.js 20+
-- npm 10+
-
-### 1. Setup
-
-```bash
-# Clone and enter the repo
-cd dealer-portal-exp
-
-# Run setup script (creates venv, installs deps)
-chmod +x scripts/setup.sh
-./scripts/setup.sh
-```
-
-### 2. Start the Application
-
-The easiest way to launch both backend and frontend together:
-
-```bash
-./start.sh
-```
-
-This starts:
-- **Backend** (FastAPI) on http://localhost:8000
-- **Frontend** (React/Vite) on http://localhost:5173
-
-Logs are written to `logs/backend.log` and `logs/frontend.log`.
-
-To stop both services:
-
-```bash
-./stop.sh
-```
-
-#### Manual Start (Alternative)
-
-**Backend:**
-```bash
-cd src/api
-source ../../.venv/bin/activate
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
-
-**Frontend** (separate terminal):
-```bash
-cd src/frontend
-npm run dev
-```
-
-The API will be available at:
-- **Swagger UI**: http://localhost:8000/docs
-- **Health Check**: http://localhost:8000/health
-- **Frontend**: http://localhost:5173
-
-### 3. Try It Out
-
-The demo runs in **simulated mode** — no Azure credentials needed. The chatbot uses pre-indexed document chunks to demonstrate the RAG pattern with realistic responses.
+To run without Azure credentials, set `SIMULATED_MODE=true` in `.env`. The chatbot uses pre-indexed document chunks and simulated responses to demonstrate the RAG pattern. See the [Development Guide](docs/development-guide.md) for details.
 
 ---
 
@@ -286,44 +430,6 @@ To switch from Demo to Future mode:
 2. Provide Azure credentials (or use Managed Identity)
 3. Run the document indexer: `python src/indexer/index_documents.py`
 4. Deploy APIM: set `deployApim=true` in Bicep parameters
-
----
-
-## Infrastructure Deployment
-
-### Deploy Demo (No APIM)
-
-```bash
-# Login to Azure
-az login
-
-# Deploy infrastructure (dev - no APIM)
-az deployment group create \
-  --resource-group rg-company-dealer-dev \
-  --template-file infra/main.bicep \
-  --parameters infra/parameters/dev.bicepparam
-```
-
-### Deploy Production (With APIM)
-
-```bash
-# Deploy infrastructure (prod - with APIM)
-az deployment group create \
-  --resource-group rg-company-dealer-prod \
-  --template-file infra/main.bicep \
-  --parameters infra/parameters/prod.bicepparam
-```
-
-### Deploy App Code
-
-```bash
-# Deploy FastAPI to App Service
-az webapp up \
-  --name app-company-dealer-dev \
-  --resource-group rg-company-dealer-dev \
-  --runtime "PYTHON:3.11" \
-  --src-path src/api
-```
 
 ---
 
@@ -413,21 +519,6 @@ python -m pytest tests/ -v
 # Run specific test
 python -m pytest tests/test_chat.py -v
 ```
-
----
-
-## Configuration
-
-All configuration is via environment variables (see `.env.example`):
-
-| Variable | Description | Demo Default |
-|----------|-------------|--------------|
-| `SIMULATED_MODE` | Use simulated backends | `true` |
-| `AZURE_OPENAI_ENDPOINT` | Azure OpenAI endpoint | (not needed in demo) |
-| `AZURE_OPENAI_DEPLOYMENT` | Model deployment name | `gpt-4o` |
-| `AZURE_SEARCH_ENDPOINT` | Azure AI Search endpoint | (not needed in demo) |
-| `AZURE_SEARCH_INDEX_NAME` | Search index name | `company-dealer-docs` |
-| `CORS_ORIGINS` | Allowed CORS origins | `http://localhost:5173` |
 
 ---
 
