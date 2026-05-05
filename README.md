@@ -2,6 +2,20 @@
 
 > **Proof of Concept** — An AI-powered dealer support chatbot that answers technical questions about Company trailer maintenance using Retrieval-Augmented Generation (RAG) grounded in 9 authoritative service documents. The default agent uses **Azure AI Foundry Agent Service** with agentic retrieval.
 
+⚠️ **CAUTION: Development Use Only**
+
+> **This codebase is intended for development and proof-of-concept purposes only. It is NOT production-ready.**
+>
+> This project does not implement the security hardening, reliability patterns, networking isolation, or operational controls required for production workloads. Before deploying to production, follow the [Microsoft Azure Well-Architected Framework (WAF)](https://learn.microsoft.com/azure/well-architected/) guidance — including the Security, Reliability, Performance Efficiency, Cost Optimization, and Operational Excellence pillars.
+>
+> Key gaps include (but are not limited to):
+> - Network isolation (Private Endpoints, VNet integration)
+> - Managed identity everywhere (no API keys in environment variables)
+> - Threat protection and input validation hardening
+> - Disaster recovery and high availability
+> - Load testing and performance benchmarking
+> - Production-grade monitoring, alerting, and incident response
+
 ---
 
 ## Table of Contents
