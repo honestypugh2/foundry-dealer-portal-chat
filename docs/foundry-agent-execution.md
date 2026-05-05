@@ -87,16 +87,36 @@ async with AIProjectClient(endpoint=self.project_endpoint, credential=credential
 
 Opens connection to Azure AI Foundry project and gets OpenAI-compatible client.
 
-#### 4c. Build Azure AI Search Tool
+#### 4c. Build Tools
 
 ```python
-search_tool = self._build_azure_ai_search_tool()
+tools = self._get_tools()
 ```
 
-Configures `AzureAISearchTool` with:
-- `project_connection_id` — links to AI Search resource in Foundry project
-- `index_name` — `dealer-portal-docs`
-- `query_type` — `SEMANTIC` (default), `VECTOR`, `SIMPLE`, or `VECTOR_SEMANTIC_HYBRID`
+Tool selection based on `AGENTIC_RETRIEVAL_ENABLED`:
+
+**MCPTool (default, agentic retrieval):**
+```python
+MCPTool(
+    server_label="knowledge-base",
+    server_url=f"{search_endpoint}/knowledgebases/dealer-knowledge-base/mcp?api-version=2025-11-01-Preview",
+    require_approval="never",
+    allowed_tools=["knowledge_base_retrieve"],
+    project_connection_id="dealer-knowledge-mcp-connection",
+)
+```
+
+The MCPTool connects to the Azure AI Search Knowledge Base, which has its own model
+(`gpt-4.1-mini`, `extractiveData` output mode) that generates sub-queries and reasons over results.
+
+**AzureAISearchTool (fallback):**
+```python
+AzureAISearchTool(indexes=[AISearchIndexResource(
+    project_connection_id=...,
+    index_name="dealer-portal-docs",
+    query_type=AzureAISearchQueryType.SEMANTIC,
+)])
+```
 
 #### 4d. Create Agent
 
@@ -112,7 +132,7 @@ agent = await project_client.agents.create_version(
 ```
 
 Creates a versioned prompt agent in Foundry Agent Service with:
-- Model (e.g., `gpt-5`)
+- Model (e.g., `gpt-4.1-mini`)
 - System instructions (shared prompt from `prompts.py`)
 - Tools (AzureAISearchTool attached)
 
@@ -235,17 +255,28 @@ AGENT_SERVICE=foundry
 SIMULATED_MODE=false
 
 # Azure AI Foundry
-AZURE_AI_PROJECT_ENDPOINT=https://<ai-services>.cognitiveservices.azure.com/api/projects/<project>
+AZURE_AI_PROJECT_ENDPOINT=https://<ai-services>.services.ai.azure.com/api/projects/<project>
 
 # Model
-AZURE_OPENAI_DEPLOYMENT=gpt-5
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1-mini
+
+# Knowledge Base model (for agentic retrieval sub-queries)
+AZURE_OPENAI_KB_MODEL_DEPLOYMENT=gpt-4.1-mini
+
+# Agentic retrieval (MCPTool)
+AGENTIC_RETRIEVAL_ENABLED=true
+AZURE_SEARCH_ENDPOINT=https://<search>.search.windows.net
 
 # Search connection (configured in Foundry portal)
 AI_SEARCH_PROJECT_CONNECTION_ID=<connection-id>
 AZURE_SEARCH_INDEX_NAME=dealer-portal-docs
 
+# Response tuning
+MAX_OUTPUT_TOKENS=4096
+MAX_CITATIONS=5
+
 # Agent lifecycle
-PERSIST_FOUNDRY_AGENTS=false   # true = reuse agent across requests
+PERSIST_FOUNDRY_AGENTS=true   # true = reuse agent across requests
 ```
 
 ---
@@ -260,6 +291,7 @@ sequenceDiagram
     participant Orch as OrchestrationService
     participant FA as DealerAgentFoundry
     participant Foundry as Foundry Agent Service
+    participant KB as Knowledge Base (MCP)
     participant Search as Azure AI Search
     participant LLM as Azure OpenAI
 
@@ -272,21 +304,26 @@ sequenceDiagram
     Orch->>FA: answer_question(question, context)
     FA->>Foundry: DefaultAzureCredential()
     FA->>Foundry: AIProjectClient.agents.create_version()
-    Note over Foundry: Agent created with<br/>model + instructions + AzureAISearchTool
+    Note over Foundry: Agent created with<br/>model + instructions + MCPTool
 
     FA->>Foundry: conversations.create()
     FA->>Foundry: responses.create(stream=True, tool_choice="required")
 
-    Foundry->>Search: AzureAISearchTool invoked (semantic query)
-    Search-->>Foundry: Document chunks from dealer-portal-docs
-    Foundry->>LLM: Generate grounded response
-    LLM-->>Foundry: Streamed answer + annotations
+    Foundry->>KB: MCPTool invokes knowledge_base_retrieve
+    KB->>KB: gpt-4.1-mini generates sub-queries
+    KB->>Search: Hybrid search (keyword + vector + semantic)
+    Search-->>KB: Document chunks from dealer-portal-docs
+    KB-->>Foundry: Grounded context with extractive data
+
+    Foundry->>LLM: gpt-4.1-mini generates final response
+    LLM-->>Foundry: Streamed answer + inline citations
 
     Foundry-->>FA: Stream events (text deltas + citations)
     FA->>Foundry: conversations.delete()
-    FA->>Foundry: agents.delete_version()
+    FA->>Foundry: agents.delete_version() (unless persisted)
 
     FA-->>Orch: {answer, citations, confidence}
+    Note over Orch: Extract inline citations (regex)<br/>Deduplicate, limit to MAX_CITATIONS=5
     Orch-->>FastAPI: ChatResponse
     FastAPI-->>Frontend: JSON response
     Frontend-->>User: Rendered answer + sources

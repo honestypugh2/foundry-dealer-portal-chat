@@ -1,8 +1,7 @@
 # Search Tool Comparison: Agent Framework vs Foundry Agent Service
 
 This document clarifies how each agent mode interacts with Azure AI Search,
-what configuration is used at query time, and whether the Agent Framework
-workflow orchestrator is necessary.
+what configuration is used at query time, and the three retrieval mechanisms available.
 
 ---
 
@@ -30,9 +29,29 @@ results = client.search(
 )
 ```
 
-### Foundry Agent Service (`AGENT_SERVICE=foundry`)
+### Foundry + MCPTool (`AGENT_SERVICE=foundry`, `AGENTIC_RETRIEVAL_ENABLED=true`) — DEFAULT
 
-The `DealerAgentFoundry` attaches an `AzureAISearchTool` to the agent. **Foundry manages
+The `DealerAgentFoundry` attaches an MCPTool that connects to the Azure AI Search
+Knowledge Base. **The KB model autonomously generates sub-queries and reasons over results.**
+
+```python
+# dealer_agent_foundry.py → _build_mcp_tool()
+MCPTool(
+    server_label="knowledge-base",
+    server_url=f"{search_endpoint}/knowledgebases/dealer-knowledge-base/mcp?api-version=2025-11-01-Preview",
+    require_approval="never",
+    allowed_tools=["knowledge_base_retrieve"],
+    project_connection_id="dealer-knowledge-mcp-connection",
+)
+```
+
+The Knowledge Base has its own model (`gpt-4.1-mini`) with `extractiveData` output mode
+and `medium` reasoning effort. It generates sub-queries, searches multiple times, and
+returns grounded context to the agent.
+
+### Foundry + AzureAISearchTool (`AGENT_SERVICE=foundry`, `AGENTIC_RETRIEVAL_ENABLED=false`)
+
+Fallback mode — `DealerAgentFoundry` attaches an `AzureAISearchTool`. **Foundry manages
 all search parameters internally.**
 
 ```python
@@ -54,16 +73,17 @@ AzureAISearchTool(
 
 ## What You Control at Query Time
 
-| Parameter | Agent Framework | Foundry Agent Service |
-|-----------|:--------------:|:---------------------:|
-| Search text (query) | ✅ Agent decides | ✅ Agent decides |
-| `top_k` (result count) | ✅ Configurable (default 5) | ❌ Foundry decides |
-| Vector query (embedding) | ✅ VectorizableTextQuery | ❌ Managed internally |
-| Semantic reranking | ✅ Explicit `query_type="semantic"` | ⚠️ Only via `query_type` enum |
-| Source filter (OData) | ✅ Can add dynamically | ❌ Not exposed |
-| Field selection | ✅ Choose which fields returned | ❌ Foundry chooses |
-| Semantic config name | ✅ Specified per query | ❌ Uses index default |
-| Multiple searches | ✅ Agent can call tool N times | ✅ Agent can re-invoke |
+| Parameter | Agent Framework | Foundry + MCPTool | Foundry + AzureAISearchTool |
+|-----------|:--------------:|:-----------------:|:---------------------------:|
+| Search text (query) | ✅ Agent decides | ✅ KB generates sub-queries | ✅ Agent decides |
+| `top_k` (result count) | ✅ Configurable (default 5) | ❌ KB decides | ❌ Foundry decides |
+| Vector query (embedding) | ✅ VectorizableTextQuery | ❌ KB handles internally | ❌ Managed internally |
+| Semantic reranking | ✅ Explicit `query_type="semantic"` | ✅ Index semantic config used | ⚠️ Only via `query_type` enum |
+| Source filter (OData) | ✅ Can add dynamically | ❌ Not exposed | ❌ Not exposed |
+| Field selection | ✅ Choose which fields returned | ❌ KB chooses | ❌ Foundry chooses |
+| Semantic config name | ✅ Specified per query | ✅ KB uses index config | ❌ Uses index default |
+| Multiple searches | ✅ Agent can call tool N times | ✅ KB autonomously multi-searches | ✅ Agent can re-invoke |
+| Reasoning over results | ❌ Agent does this | ✅ KB model reasons before returning | ❌ Agent does this |
 
 ---
 
@@ -171,7 +191,22 @@ is the correct pattern — which is what we now have.
 └────────────────────────────────────────────────────────────────┘
 
 ┌────────────────────────────────────────────────────────────────┐
-│                   Foundry Agent Service Path                     │
+│             Foundry + MCPTool Path (DEFAULT)                     │
+│                                                                  │
+│  OrchestrationService                                           │
+│    → DealerAgentFoundry                                         │
+│      → AIProjectClient.agents.create_version()                  │
+│        → MCPTool(server_label="knowledge-base")                 │
+│      → openai_client.responses.create(tool_choice="required")   │
+│        → KB model (gpt-4.1-mini) generates sub-queries          │
+│        → KB searches index (hybrid + semantic)                  │
+│        → KB reasons over results (extractiveData)               │
+│        → Agent generates final grounded answer                  │
+│                                                                  │
+└────────────────────────────────────────────────────────────────┘
+
+┌────────────────────────────────────────────────────────────────┐
+│           Foundry + AzureAISearchTool Path (fallback)            │
 │                                                                  │
 │  OrchestrationService                                           │
 │    → DealerAgentFoundry                                         │

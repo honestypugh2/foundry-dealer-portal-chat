@@ -33,8 +33,8 @@ The default development workflow uses **Document Intelligence mode**:
 | `CHUNK_CROSS_PAGE` | `false` | Chunk across page boundaries |
 | `SEARCH_USE_COMPRESSION` | `true` | Enable scalar quantization (int8) |
 | `USE_AZURE_DOCUMENT_INTELLIGENCE` | `true` | Use Azure DI (false = PyPDF2 fallback) |
-| `AGENT_SERVICE` | `agent_framework` | Agent routing (`agent_framework` or `foundry`) |
-| `SIMULATED_MODE` | `true` | Use in-memory search (no Azure resources needed) |
+| `AGENT_SERVICE` | `foundry` | Agent routing (`agent_framework` or `foundry`) |
+| `SIMULATED_MODE` | `false` | Use in-memory search (no Azure resources needed) |
 
 ---
 
@@ -236,27 +236,30 @@ sequenceDiagram
     participant Orch as OrchestrationService
     participant FA as DealerAgentFoundry
     participant Foundry as Azure AI Foundry Agent Service
-    participant Search as Azure AI Search (via tool)
-    participant LLM as Azure OpenAI (GPT)
+    participant KB as Knowledge Base (MCP)
+    participant Search as Azure AI Search
+    participant LLM as Azure OpenAI (gpt-4.1-mini)
 
     User->>FE: Type question
     FE->>API: POST /api/chat {message, history}
     API->>Orch: process_chat(message, history)
     Orch->>FA: answer_question(query)
 
-    FA->>Foundry: Create agent (model + instructions + AzureAISearchTool)
+    FA->>Foundry: Create agent (model + instructions + MCPTool)
     Foundry-->>FA: agent_id
 
-    FA->>Foundry: Create thread + message
-    FA->>Foundry: Create run (stream)
+    FA->>Foundry: Create conversation
+    FA->>Foundry: responses.create(stream=True, tool_choice="required")
 
-    Foundry->>LLM: Process with tools
-    LLM->>Search: AzureAISearchTool (automatic retrieval)
-    Search-->>LLM: Grounded results
-    LLM-->>Foundry: Streamed response with annotations
+    Foundry->>KB: MCPTool → knowledge_base_retrieve
+    KB->>Search: Sub-queries (hybrid search)
+    Search-->>KB: Grounded results
+    KB-->>Foundry: Extractive data context
+    Foundry->>LLM: Generate grounded response
+    LLM-->>Foundry: Streamed response with inline citations
 
-    Foundry-->>FA: Run completed (messages + citations)
-    FA->>Foundry: Delete agent (if PERSIST_FOUNDRY_AGENTS=false)
+    Foundry-->>FA: Stream events (text + citations)
+    FA->>Foundry: Delete conversation + agent (if PERSIST_FOUNDRY_AGENTS=false)
 
     FA-->>Orch: {answer, citations}
     Orch-->>API: ChatResponse

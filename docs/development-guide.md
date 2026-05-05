@@ -15,7 +15,7 @@
 
 You also need an active Azure subscription with the following deployed resources:
 - Azure AI Foundry project (with AI Services endpoint)
-- Azure OpenAI deployment (`gpt-5` or `gpt-4o`)
+- Azure OpenAI deployment (`gpt-4.1-mini` or `gpt-4.1-mini`)
 - Azure AI Search service (with indexed documents)
 - Azure Blob Storage (document source)
 
@@ -58,7 +58,7 @@ AGENTIC_RETRIEVAL_ENABLED=true
 AZURE_AI_PROJECT_ENDPOINT=https://<your-ai-services>.services.ai.azure.com/api/projects/<your-project>
 
 # Azure OpenAI
-AZURE_OPENAI_DEPLOYMENT=gpt-5
+AZURE_OPENAI_DEPLOYMENT=gpt-4.1-mini
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT=text-embedding-3-large
 
 # Azure AI Search
@@ -178,9 +178,9 @@ The main chat panel sends questions to `POST /api/chat`. With `AGENT_SERVICE=fou
 
 1. Creates a Foundry Agent with an MCPTool connected to the knowledge base
 2. The agent uses agentic retrieval — the KB model (gpt-4.1-mini) autonomously generates sub-queries, searches the index multiple times, and reasons over results
-3. The agent model (gpt-5) generates a grounded answer with inline citations
+3. The agent model (gpt-4.1-mini) generates a grounded answer with inline citations
 
-**Typical latency:** 60–105 seconds per query (dominated by gpt-5 response generation)
+**Typical latency:** 10–30 seconds per query (KB retrieval + response generation)
 
 ### Document Search
 
@@ -293,7 +293,7 @@ Azure AI Search — Agentic Retrieval (Knowledge Base)
     │
     │  gpt-4.1-mini plans sub-queries → searches index → reasons
     ▼
-Agent model (gpt-5) generates grounded answer with citations
+Agent model (gpt-4.1-mini) generates grounded answer with citations
 ```
 
 ---
@@ -306,10 +306,13 @@ Agent model (gpt-5) generates grounded answer with citations
 | `AGENT_SERVICE` | `foundry` or `agent_framework` | `foundry` |
 | `AGENTIC_RETRIEVAL_ENABLED` | Use KB + MCPTool (vs plain AzureAISearchTool) | `true` |
 | `AZURE_AI_PROJECT_ENDPOINT` | Foundry project endpoint | (your endpoint) |
-| `AZURE_OPENAI_DEPLOYMENT` | Agent model deployment | `gpt-5` |
+| `AZURE_OPENAI_DEPLOYMENT` | Agent model deployment | `gpt-4.1-mini` |
+| `AZURE_OPENAI_KB_MODEL_DEPLOYMENT` | Knowledge Base model for query planning | `gpt-4.1-mini` |
 | `AZURE_SEARCH_ENDPOINT` | AI Search service URL | (your endpoint) |
 | `AZURE_SEARCH_INDEX_NAME` | Search index name | `dealer-portal-docs` |
 | `AZURE_SEARCH_API_KEY` | Admin key (dev only — prod uses MI) | (your key) |
+| `MAX_CITATIONS` | Max citations returned per response | `5` |
+| `MAX_OUTPUT_TOKENS` | Max output tokens for agent response | `4096` |
 | `PERSIST_FOUNDRY_AGENTS` | Keep agents after use (saves creation time) | `true` |
 | `CORS_ORIGINS` | Allowed origins for CORS | `http://localhost:5173` |
 
@@ -365,6 +368,6 @@ See `infra/README.md` for full Bicep module details and `azure.yaml.prod` for th
 | `"mode": "simulated"` in health check | `SIMULATED_MODE=true` | Set to `false` in `.env` and restart |
 | 403 on agent tool calls | Missing RBAC on AI Services managed identity | Assign Search Index Data Reader + Search Service Contributor |
 | `MCPTool` connection fails | MCP connection uses wrong auth type | Re-run `python -m indexer.index_documents --provision-agentic` |
-| Slow responses (>90s) | gpt-5 response generation is the bottleneck | Expected behavior; KB retrieval itself is 4–12s |
+| Slow responses (>90s) | gpt-4.1-mini response generation is the bottleneck | Expected behavior; KB retrieval itself is 4–12s |
 | `FOUNDRY_AGENT_AVAILABLE = False` | Missing `azure-ai-projects` package | `pip install -r src/api/requirements.txt` |
 | Frontend shows network error | Backend not running or wrong port | Ensure `uvicorn` is on port 8000; Vite proxies to it |

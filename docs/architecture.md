@@ -36,7 +36,7 @@ The Company Dealer Portal is an AI-powered technical support system that enables
 │           │                                      │                        │
 │           ▼                                      ▼                        │
 │  ┌──────────────────┐                  ┌─────────────────────┐          │
-│  │ Azure AI Search  │                  │  Azure OpenAI GPT-4o│          │
+│  │ Azure AI Search  │                  │  Azure OpenAI gpt-4.1-mini│          │
 │  │ (Simulated)      │                  │  (Simulated)         │          │
 │  └──────────────────┘                  └─────────────────────┘          │
 │                                                                           │
@@ -113,7 +113,7 @@ The Company Dealer Portal is an AI-powered technical support system that enables
 ┌───────────────┐    ┌─────────────────┐    ┌─────────────────────┐
 │Azure AI Search│    │ Azure OpenAI    │    │  Azure Blob Storage │
 │               │    │                 │    │                     │
-│• Hybrid Search│    │• GPT-4o         │    │• Raw PDFs           │
+│• Hybrid Search│    │• gpt-4.1-mini         │    │• Raw PDFs           │
 │• Semantic Rank│    │• text-embedding │    │• Extracted Chunks   │
 │• Vector Index │    │  -3-large       │    │                     │
 │               │    │                 │    │                     │
@@ -160,7 +160,7 @@ The Company Dealer Portal is an AI-powered technical support system that enables
 | **API Gateway** | FastAPI direct | Azure API Management (APIM) |
 | **API Layer** | FastAPI on localhost | FastAPI on Azure App Service (Linux) |
 | **AI Search** | Simulated in-memory search | Azure AI Search (hybrid: keyword + semantic + vector) |
-| **LLM** | Simulated response generation | Azure OpenAI GPT-4o |
+| **LLM** | Simulated response generation | Azure OpenAI gpt-4.1-mini |
 | **Embeddings** | N/A (demo uses keyword) | Azure OpenAI text-embedding-3-large |
 | **Document Storage** | Local filesystem (`data/portal_docs/`) | Azure Blob Storage |
 | **Secrets** | `.env` file | Azure Key Vault + Managed Identity |
@@ -177,17 +177,31 @@ The Company Dealer Portal is an AI-powered technical support system that enables
 ```
 1. Dealer types question → React Frontend
 2. Frontend sends POST /api/chat → FastAPI (or APIM → FastAPI)
-3. FastAPI Orchestrator:
-   a. Extracts query from request
-   b. Calls Azure AI Search (hybrid retrieval)
-      - Keyword search + semantic ranking + vector similarity
-      - Returns top-5 relevant document chunks with citations
-   c. Constructs prompt: system instructions + retrieved context + user question
-   d. Calls Azure OpenAI GPT-4o for grounded answer generation
-   e. Assembles response with answer + citations + confidence score
+3. FastAPI Orchestrator (AGENT_SERVICE=foundry):
+   a. Creates/reuses a Foundry Agent with MCPTool (agentic retrieval)
+   b. Agent autonomously uses Knowledge Base:
+      - KB model (gpt-4.1-mini) generates sub-queries
+      - Searches AI Search index (hybrid: keyword + semantic + vector)
+      - Returns grounded context with citations
+   c. Agent model (gpt-4.1-mini) generates final answer
+   d. Orchestrator extracts citations (max 5, deduplicated)
 4. Response returned to Frontend
 5. Frontend renders answer with source citations and document references
 ```
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/api/chat` | POST | Chat with AI agent (returns answer + citations) |
+| `/api/search` | POST | Hybrid document search (keyword + vector + semantic reranker) |
+| `/api/documents` | GET | List available documents |
+| `/api/documents/{name}` | GET | Download/view a specific PDF document |
+| `/api/config` | GET | Current app config (mode, model, agent, retrieval settings) |
+| `/health` | GET | Health check |
+| `/docs` | GET | OpenAPI documentation |
 
 ---
 
