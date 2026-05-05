@@ -1,0 +1,42 @@
+# ============================================================================
+# Company Dealer Portal - Root Requirements
+# Python 3.12+ | All packages latest stable as of May 2026
+# ============================================================================
+
+# --- Web Framework ---
+fastapi==0.136.1
+uvicorn[standard]==0.46.0
+gunicorn==25.3.0
+pydantic==2.13.3
+pydantic-settings==2.14.0
+
+# --- Azure Identity & Security ---
+azure-identity==1.25.3
+azure-keyvault-secrets==4.11.0
+
+# --- Azure AI Foundry / Agent Framework ---
+azure-ai-projects==2.1.0
+azure-ai-agents==1.1.0
+agent-framework==1.2.2
+
+# --- Azure OpenAI ---
+openai==2.33.0
+
+# --- Azure AI Search ---
+azure-search-documents==12.0.0
+
+# --- Azure AI Document Intelligence ---
+azure-ai-documentintelligence==1.0.2
+
+# --- Azure Storage ---
+azure-storage-blob==12.28.0
+
+# --- HTTP & Utilities ---
+python-multipart==0.0.27
+python-dotenv==1.2.2
+httpx==0.28.1
+azure-core==1.40.0
+
+# --- Document Processing ---
+PyPDF2==3.0.1
+tiktoken==0.12.0

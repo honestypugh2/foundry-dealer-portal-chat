@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "dev"
+    },
+    "location": {
+      "value": "swedencentral"
+    },
+    "baseName": {
+      "value": "mydealer"
+    },
+    "deployAppService": {
+      "value": false
+    },
+    "deployApim": {
+      "value": false
+    },
+    "deployDocumentIntelligence": {
+      "value": true
+    },
+    "openAiModelDeployment": {
+      "value": "gpt-5"
+    },
+    "embeddingModelDeployment": {
+      "value": "text-embedding-3-large"
+    },
+    "openAiModelCapacity": {
+      "value": 30
+    },
+    "embeddingModelCapacity": {
+      "value": 30
+    },
+    "appServiceSkuName": {
+      "value": "B1"
+    },
+    "appServiceSkuTier": {
+      "value": "Basic"
+    },
+    "searchSkuName": {
+      "value": "basic"
+    },
+    "searchReplicaCount": {
+      "value": 1
+    },
+    "searchPartitionCount": {
+      "value": 1
+    },
+    "searchIndexName": {
+      "value": "dealer-portal-docs"
+    },
+    "storageSkuName": {
+      "value": "Standard_LRS"
+    },
+    "useNetworkIsolation": {
+      "value": false
+    },
+    "publicNetworkAccess": {
+      "value": "Enabled"
+    },
+    "enablePurgeProtection": {
+      "value": false
+    },
+    "softDeleteRetentionInDays": {
+      "value": 7
+    },
+    "logRetentionDays": {
+      "value": 30
+    },
+    "documentIntelligenceSkuName": {
+      "value": "F0"
+    },
+    "corsOrigins": {
+      "value": "http://localhost:5173,http://localhost:3000"
+    },
+    "simulatedMode": {
+      "value": true
+    },
+    "principalId": {
+      "value": ""
+    },
+    "principalType": {
+      "value": "User"
+    }
+  }
+}

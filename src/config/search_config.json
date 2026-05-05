@@ -1,0 +1,151 @@
+{
+    "search_config": {
+        "index_name": "dealer-portal-docs",
+        "semantic_configuration": "dealer-semantic-config",
+        "vector_field": "content_vector",
+        "content_field": "content",
+        "source_field": "content_with_source",
+        "blob_url_field": "blob_url",
+        "parent_key_field": "chunk_parent_id",
+        "filename_field": "metadata_storage_name",
+        "filepath_field": "metadata_storage_path",
+        "parent_title_field": "document_name",
+        "document_type_field": "source_system",
+        "top_k": 5
+    },
+    "vector_search": {
+        "algorithm": {
+            "name": "dealer-hnsw-config",
+            "kind": "hnsw",
+            "parameters": {
+                "metric": "cosine",
+                "m": 4,
+                "ef_construction": 400,
+                "ef_search": 500
+            }
+        },
+        "compression": {
+            "name": "dealer-scalar-quantization",
+            "kind": "scalarQuantization",
+            "parameters": {
+                "quantized_data_type": "int8"
+            },
+            "rescoring_options": {
+                "enable_rescoring": true,
+                "default_oversampling": 4
+            }
+        },
+        "profile": {
+            "name": "dealer-vector-profile",
+            "algorithm_configuration_name": "dealer-hnsw-config",
+            "compression_name": "dealer-scalar-quantization",
+            "vectorizer_name": "dealer-azure-openai-vectorizer"
+        },
+        "vectorizer": {
+            "name": "dealer-azure-openai-vectorizer",
+            "kind": "azureOpenAI",
+            "parameters": {
+                "deployment_name": "text-embedding-3-large",
+                "model_name": "text-embedding-3-large"
+            }
+        },
+        "dimensions": 3072
+    },
+    "semantic_search": {
+        "configuration_name": "dealer-semantic-config",
+        "prioritized_fields": {
+            "content_fields": ["content"],
+            "title_field": "document_name",
+            "keywords_fields": ["source_system"]
+        }
+    },
+    "integrated_vectorization": {
+        "indexer_name": "dealer-docs-indexer",
+        "skillset_name": "dealer-docs-skillset",
+        "data_source_name": "dealer-docs-blob-source",
+        "skills": [
+            {
+                "type": "DocumentIntelligenceLayoutSkill",
+                "name": "DocumentLayoutSkill",
+                "context": "/document",
+                "output_mode": "oneToMany",
+                "markdown_headers_depth": "h3"
+            },
+            {
+                "type": "SplitSkill",
+                "name": "TextSplitSkill",
+                "context": "/document",
+                "text_split_mode": "pages",
+                "maximum_page_length": 2000,
+                "page_overlap_length": 200
+            },
+            {
+                "type": "AzureOpenAIEmbeddingSkill",
+                "name": "AzureOpenAIEmbeddingSkill",
+                "deployment_id": "text-embedding-3-large",
+                "dimensions": 3072,
+                "model_name": "text-embedding-3-large"
+            }
+        ],
+        "chunking": {
+            "unit": "characters",
+            "maximum_length": 2000,
+            "overlap_length": 200
+        },
+        "index_projections": {
+            "target_index_name": "dealer-portal-docs",
+            "parent_key_field_name": "chunk_parent_id",
+            "source_context": "/document/pages/*",
+            "mappings": [
+                {"name": "content_vector", "source": "/document/pages/*/content_vector"},
+                {"name": "content", "source": "/document/pages/*/content"},
+                {"name": "content_with_source", "source": "/document/pages/*/content_with_source"},
+                {"name": "blob_url", "source": "/document/metadata_storage_path"},
+                {"name": "metadata_storage_name", "source": "/document/metadata_storage_name"},
+                {"name": "metadata_storage_path", "source": "/document/metadata_storage_path"},
+                {"name": "document_name", "source": "/document/document_name"},
+                {"name": "source_system", "source": "/document/source_system"}
+            ]
+        },
+        "cognitive_services": {
+            "type": "AIServicesByKey",
+            "description": "AI Services for dealer knowledge base"
+        },
+        "excluded_extensions": [".vsd", ".vsdx", ".mpp"]
+    },
+    "agentic_retrieval": {
+        "knowledge_source_name": "dealer-knowledge-source",
+        "knowledge_source_description": "Knowledge source for JAYCO dealer technical documentation indexed in dealer-portal-docs",
+        "knowledge_base_name": "dealer-knowledge-base",
+        "output_mode": "EXTRACTIVE_DATA",
+        "retrieval_reasoning_effort": "medium",
+        "search_fields": [
+            "content",
+            "document_name",
+            "source_system"
+        ],
+        "semantic_configuration_name": "dealer-semantic-config",
+        "source_data_fields": [
+            "id",
+            "document_name",
+            "source_system",
+            "blob_url"
+        ],
+        "include_references": true,
+        "include_reference_source_data": true,
+        "always_query_source": true,
+        "include_activity": true,
+        "mcp": {
+            "project_connection_name": "dealer-knowledge-mcp-connection",
+            "api_version": "2025-11-01-Preview"
+        }
+    },
+    "blob_storage": {
+        "container_name": "dealer-portal-docs",
+        "upload_folder": "documents"
+    },
+    "foundry_agent": {
+        "retrieval_instructions": "Search all connected knowledge sources for JAYCO trailer technical documentation.\nExpand search broadly using likely trailer terminology variants, part numbers, maintenance procedures, and common technician language.\nDo not suppress weak matches.\nPreserve exact filenames, source paths, and metadata exactly as stored.\nIf evidence is not found in the connected knowledge sources, say so clearly.",
+        "answer_instructions": "You are the JAYCO Dealer Technical Support Assistant.\nProvide grounded evidence only from the connected knowledge sources.\nDo not use general knowledge. Do not fabricate filenames, paths, or document details.\nPreserve exact filenames exactly as retrieved.\nWhen describing procedures, use numbered steps.\nHighlight any safety warnings prominently.\nCite the specific document and page number when providing information.\nIf context doesn't contain enough information, say so clearly."
+    }
+}

@@ -1,0 +1,87 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentParameters.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "environment": {
+      "value": "prod"
+    },
+    "location": {
+      "value": "swedencentral"
+    },
+    "baseName": {
+      "value": "mydealer"
+    },
+    "deployAppService": {
+      "value": true
+    },
+    "deployApim": {
+      "value": true
+    },
+    "deployDocumentIntelligence": {
+      "value": true
+    },
+    "openAiModelDeployment": {
+      "value": "gpt-5"
+    },
+    "embeddingModelDeployment": {
+      "value": "text-embedding-3-large"
+    },
+    "openAiModelCapacity": {
+      "value": 80
+    },
+    "embeddingModelCapacity": {
+      "value": 80
+    },
+    "appServiceSkuName": {
+      "value": "P1v3"
+    },
+    "appServiceSkuTier": {
+      "value": "PremiumV3"
+    },
+    "searchSkuName": {
+      "value": "standard"
+    },
+    "searchReplicaCount": {
+      "value": 2
+    },
+    "searchPartitionCount": {
+      "value": 1
+    },
+    "searchIndexName": {
+      "value": "dealer-portal-docs"
+    },
+    "storageSkuName": {
+      "value": "Standard_GRS"
+    },
+    "useNetworkIsolation": {
+      "value": true
+    },
+    "publicNetworkAccess": {
+      "value": "Disabled"
+    },
+    "enablePurgeProtection": {
+      "value": true
+    },
+    "softDeleteRetentionInDays": {
+      "value": 90
+    },
+    "logRetentionDays": {
+      "value": 90
+    },
+    "documentIntelligenceSkuName": {
+      "value": "S0"
+    },
+    "corsOrigins": {
+      "value": "https://dealer-portal.jayco.com"
+    },
+    "simulatedMode": {
+      "value": false
+    },
+    "principalId": {
+      "value": ""
+    },
+    "principalType": {
+      "value": "ServicePrincipal"
+    }
+  }
+}
