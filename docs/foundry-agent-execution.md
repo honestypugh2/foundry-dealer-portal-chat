@@ -226,7 +226,7 @@ Returns JSON to frontend:
 {
     "answer": "The torque specification for 7K axles is...",
     "citations": [
-        {"document_name": "Jayco Axle Torque Procedures.pdf", "chunk_text": "...", ...}
+        {"document_name": "Company Axle Torque Procedures.pdf", "chunk_text": "...", ...}
     ],
     "conversation_id": "abc-123",
     "confidence_score": 0.8

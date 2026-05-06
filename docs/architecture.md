@@ -56,7 +56,7 @@ The Company Dealer Portal is an AI-powered technical support system that enables
 │   │                  data/portal_docs/ (9 PDFs)                       │   │
 │   │  • Axles and Suspension - Lippert Master Manual.pdf               │   │
 │   │  • Hub, Drums, & Bearings Installation Instructions.pdf           │   │
-│   │  • Jayco Axle Torque Procedures.pdf                               │   │
+│   │  • Company Axle Torque Procedures.pdf                              │   │
 │   │  • IS-System-Troubleshooting-Guide_v6-1.pdf                       │   │
 │   │  • Customer Advisory (Fixed Flange Nut Substitution).pdf          │   │
 │   │  • Deflection Measurement Procedure.pdf                           │   │
@@ -211,7 +211,7 @@ The Company Dealer Portal is an AI-powered technical support system that enables
 |----------|--------------|----------------|
 | Axles and Suspension - Lippert Master Manual.pdf | SharePoint | Axle alignment, suspension maintenance, tire wear diagnosis |
 | Hub, Drums, & Bearings Installation Instructions.pdf | Revver | Bearing repack, hub installation, temperature diagnosis |
-| Jayco Axle Torque Procedures.pdf | SharePoint | Torque specifications, U-bolt procedures |
+| Company Axle Torque Procedures.pdf | SharePoint | Torque specifications, U-bolt procedures |
 | IS-System-Troubleshooting-Guide_v6-1.pdf | Revver | IS system troubleshooting, handling issues |
 | Customer Advisory (Fixed Flange Nut Substitution) - 06-02-23.pdf | SharePoint | Safety advisory, nut replacement |
 | Deflection Measurement Procedure.pdf | SharePoint | Spring deflection, load measurement |

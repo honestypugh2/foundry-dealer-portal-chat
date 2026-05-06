@@ -6,7 +6,7 @@
 flowchart TB
     subgraph CLIENT["Client Layer"]
         FE_DEV["Frontend (localhost:5173)"]
-        FE_PROD["Frontend (dealer-portal.jayco.com)"]
+        FE_PROD["Frontend (dealer-portal.company.com)"]
     end
 
     subgraph PROD_GATEWAY["PROD: API Management Gateway"]
@@ -68,7 +68,7 @@ flowchart TB
 ### Entry Points
 
 - **Dev** → Frontend at `localhost:5173` hits the FastAPI app directly over HTTP (no auth, no gateway)
-- **Prod** → Frontend at `dealer-portal.jayco.com` routes through **Azure API Management** which enforces JWT authentication (Entra ID) and rate limiting (100 req/min)
+- **Prod** → Frontend at `dealer-portal.company.com` routes through **Azure API Management** which enforces JWT authentication (Entra ID) and rate limiting (100 req/min)
 
 ### FastAPI Application (`src/api/app/main.py`)
 
@@ -135,7 +135,7 @@ flowchart LR
 | **Storage** | LRS (local redundancy) | GRS (geo-redundant) |
 | **OpenAI Capacity** | 30 TPM | 80 TPM |
 | **Secrets** | No purge protection, 7-day soft delete | Purge protection enabled, 90-day retention |
-| **CORS** | `localhost:5173`, `localhost:3000` | `https://dealer-portal.jayco.com` |
+| **CORS** | `localhost:5173`, `localhost:3000` | `https://dealer-portal.company.com` |
 
 **Key insight:** In dev, `SIMULATED_MODE=true` means the AISearchService uses 11 preloaded in-memory document chunks with keyword scoring — no Azure services needed. In prod, everything is live with managed identity auth.
 

@@ -163,7 +163,7 @@ Confirm live mode:
 
 ```bash
 curl http://localhost:8000/
-# Expected: {"service":"JAYCO Dealer Portal API","version":"1.0.0","status":"healthy","mode":"live"}
+# Expected: {"service":"COMPANY Dealer Portal API","version":"1.0.0","status":"healthy","mode":"live"}
 ```
 
 The Vite dev server proxies all `/api/*` requests to the FastAPI backend at `localhost:8000` (configured in `vite.config.ts`), so the frontend and backend work together seamlessly without CORS issues.
@@ -199,7 +199,7 @@ The search panel sends queries to `POST /api/search` for direct Azure AI Search 
 ```bash
 curl -X POST http://localhost:8000/api/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "How do I repack bearings on my JAYCO trailer?"}'
+  -d '{"message": "How do I repack bearings on my COMPANY trailer?"}'
 ```
 
 **Request body:**

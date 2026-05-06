@@ -1,5 +1,5 @@
 // ============================================================================
-// JAYCO Dealer Portal - Main Infrastructure Template (WAF-aligned)
+// COMPANY Dealer Portal - Main Infrastructure Template (WAF-aligned)
 // Deploys: Azure OpenAI, AI Search, Storage, App Service, APIM, Key Vault,
 //          Document Intelligence, Application Insights, Log Analytics,
 //          VNet + Private Endpoints (prod), RBAC Role Assignments

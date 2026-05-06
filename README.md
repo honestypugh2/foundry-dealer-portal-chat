@@ -300,7 +300,7 @@ dealer-portal-exp/
 │       ├── Hub, Drums, & Bearings Installation Instructions.pdf
 │       ├── IS-System-Troubleshooting-Guide_v6-1.pdf
 │       ├── Jake Plate and Shock Bushing Guide.pdf
-│       └── Jayco Axle Torque Procedures.pdf
+│       └── Company Axle Torque Procedures.pdf
 │
 ├── docs/
 │   └── architecture.md                # Full architecture design document
@@ -408,7 +408,7 @@ These queries demonstrate the chatbot's capabilities across the 9 source documen
 | How do I repack the bearings step by step? | Hub, Drums, & Bearings Installation Instructions |
 | What maintenance should I regularly perform on the suspension system? | Axles and Suspension - Lippert Master Manual |
 | How do I identify whether I have a 7K or 8K beam assembly? | Equalizer Chart Drawing |
-| What are the torque specs for U-bolt nuts? | Jayco Axle Torque Procedures |
+| What are the torque specs for U-bolt nuts? | Company Axle Torque Procedures |
 | What is the customer advisory about flange nut substitution? | Customer Advisory (Fixed Flange Nut Substitution) |
 | How do I install a Jake plate? | Jake Plate and Shock Bushing Guide |
 | What's the procedure for brake disconnect during service? | GM SERVICE BULLETIN FOR BRAKE DISCONNECT |

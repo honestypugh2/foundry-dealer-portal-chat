@@ -52,7 +52,7 @@ param logRetentionDays = 90
 param documentIntelligenceSkuName = 'S0'
 
 // App configuration
-param corsOrigins = 'https://dealer-portal.jayco.com'
+param corsOrigins = 'https://dealer-portal.company.com'
 param simulatedMode = false
 
 // RBAC - Set via CI/CD pipeline service principal

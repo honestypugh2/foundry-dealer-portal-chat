@@ -1,6 +1,6 @@
 # Agent Architecture & Modes
 
-This document details the two agent modes available in the JAYCO Dealer Portal
+This document details the two agent modes available in the COMPANY Dealer Portal
 and how they differ in implementation, capabilities, and trade-offs.
 
 ---

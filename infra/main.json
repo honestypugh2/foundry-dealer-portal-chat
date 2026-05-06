@@ -1484,7 +1484,7 @@
               },
               "properties": {
                 "publisherEmail": "admin@company-dealer-portal.com",
-                "publisherName": "JAYCO Dealer Portal"
+                "publisherName": "COMPANY Dealer Portal"
               }
             },
             {
@@ -1546,7 +1546,7 @@
               "apiVersion": "2023-09-01-preview",
               "name": "[format('{0}/{1}', format('apim-{0}', parameters('baseName')), 'company-dealer-api')]",
               "properties": {
-                "displayName": "JAYCO Dealer Portal API",
+                "displayName": "COMPANY Dealer Portal API",
                 "path": "dealer",
                 "protocols": [
                   "https"

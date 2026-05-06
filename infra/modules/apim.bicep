@@ -19,7 +19,7 @@ resource apim 'Microsoft.ApiManagement/service@2023-09-01-preview' = {
   }
   properties: {
     publisherEmail: 'admin@company-dealer-portal.com'
-    publisherName: 'JAYCO Dealer Portal'
+    publisherName: 'COMPANY Dealer Portal'
   }
 }
 
@@ -73,7 +73,7 @@ resource dealerApi 'Microsoft.ApiManagement/service/apis@2023-09-01-preview' = {
   parent: apim
   name: 'company-dealer-api'
   properties: {
-    displayName: 'JAYCO Dealer Portal API'
+    displayName: 'COMPANY Dealer Portal API'
     path: 'dealer'
     protocols: ['https']
     subscriptionRequired: true
