@@ -159,3 +159,12 @@ tests/*.json
 document-mappings.md
 
 future-state-architecture.md
+
+Microsoft-API-Package/
+architecture-review/
+docs/document-mappings.docx
+docs/future-state-architecture.docx
+package-lock.json
+package.json
+scripts/render_architecture_png.py
+msft/
