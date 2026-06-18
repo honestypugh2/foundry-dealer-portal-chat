@@ -85,10 +85,10 @@ function ChatBot() {
       <div className="chat-messages">
         {messages.length === 0 && (
           <div className="welcome-message">
-            <h2>JAYCO Technical Support Assistant</h2>
+            <h2>Technical Support Assistant</h2>
             <p>
               Ask questions about axles, suspension, hubs, bearings, brakes, and maintenance
-              procedures for JAYCO trailers.
+              procedures for trailers.
             </p>
           </div>
         )}
@@ -128,7 +128,7 @@ function ChatBot() {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Ask a question about JAYCO trailer maintenance..."
+            placeholder="Ask a question about trailer maintenance..."
             disabled={isLoading}
           />
           <button onClick={() => handleSend()} disabled={!input.trim() || isLoading}>

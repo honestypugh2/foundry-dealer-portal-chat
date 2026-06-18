@@ -39,7 +39,7 @@ function SearchPanel() {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Search JAYCO technical documents..."
+          placeholder="Search technical documents..."
         />
         <button onClick={handleSearch} disabled={loading}>
           {loading ? 'Searching...' : 'Search'}

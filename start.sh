@@ -1,12 +1,12 @@
 #!/bin/bash
-# Start script for JAYCO Dealer Portal Backend and Frontend
+# Start script for Dealer Portal Backend and Frontend
 
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 LOG_DIR="$PROJECT_ROOT/logs"
 mkdir -p "$LOG_DIR"
 
 echo "========================================"
-echo "JAYCO Dealer Portal Application Launcher"
+echo "Dealer Portal Application Launcher"
 echo "========================================"
 
 # Check if virtual environment exists

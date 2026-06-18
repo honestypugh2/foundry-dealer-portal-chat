@@ -1,7 +1,7 @@
 #!/bin/bash
-# Stop script for JAYCO Dealer Portal Application
+# Stop script for Dealer Portal Application
 
-echo "Stopping JAYCO Dealer Portal Application..."
+echo "Stopping Dealer Portal Application..."
 
 # Kill backend on port 8000
 fuser -k 8000/tcp 2>/dev/null

@@ -22,6 +22,7 @@
 
 - [Prerequisites](#prerequisites)
 - [Quick Start](#quick-start)
+- [User Interface](#user-interface)
 - [Environment Variables](#environment-variables)
 - [Infrastructure Deployment (azd)](#infrastructure-deployment-azd)
 - [Architecture Overview](#architecture-overview)
@@ -134,6 +135,14 @@ The app is now available at:
 - **Swagger UI:** http://localhost:8000/docs
 
 For the full local development workflow (manual start, debugging, testing), see the [Development Guide](docs/development-guide.md).
+
+---
+
+## User Interface
+
+The React frontend (a stand-in for the DynamicWeb dealer portal) provides three views — Chat Assistant, Search, and Documents — switchable from the top navigation. A status bar shows the live mode, model, knowledge base, and active agent.
+
+![Dealer Portal — Technical Support Assistant interface](images/dealer_portal_main.png)
 
 ---
 

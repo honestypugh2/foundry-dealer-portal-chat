@@ -177,6 +177,10 @@ class DealerAgentFoundry:
             tools = self._get_tools()
 
             # Create agent with tool
+            # NOTE: request an uncompressed response (Accept-Encoding: identity).
+            # azure-core 1.40.0 fails to decode a gzip-compressed response body in
+            # ContentDecodePolicy (UnicodeDecodeError on byte 0x8b), so we opt out of
+            # compression for the agent management calls.
             agent = await project_client.agents.create_version(
                 agent_name="DealerTechAgentFoundry",
                 definition=PromptAgentDefinition(
@@ -184,7 +188,8 @@ class DealerAgentFoundry:
                     instructions=self.instructions,
                     tools=tools,
                 ),
-                description="JAYCO dealer technical support agent - answers maintenance and diagnostic questions",
+                description="Dealer technical support agent - answers maintenance and diagnostic questions",
+                headers={"Accept-Encoding": "identity"},
             )
             logger.info(f"Agent created (id: {agent.id}, name: {agent.name}, version: {agent.version})")
 
@@ -254,6 +259,7 @@ class DealerAgentFoundry:
                     await project_client.agents.delete_version(
                         agent_name=agent.name,
                         agent_version=agent.version,
+                        headers={"Accept-Encoding": "identity"},
                     )
                     logger.info("Agent deleted")
                 else:

@@ -182,6 +182,8 @@ The main chat panel sends questions to `POST /api/chat`. With `AGENT_SERVICE=fou
 
 **Typical latency:** 10–30 seconds per query (KB retrieval + response generation)
 
+![Dealer Portal — Technical Support Assistant interface](../images/dealer_portal_main.png)
+
 ### Document Search
 
 The search panel sends queries to `POST /api/search` for direct Azure AI Search queries (hybrid + semantic reranking).

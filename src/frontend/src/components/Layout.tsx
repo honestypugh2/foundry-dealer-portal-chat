@@ -21,7 +21,7 @@ function Layout({ children, activeView, onViewChange }: LayoutProps) {
     <div className="app-layout">
       <header className="app-header">
         <h1>
-          JAYCO Dealer Portal
+          Dealer Portal
           <span className="badge">AI-Powered</span>
         </h1>
         <nav className="app-nav">
