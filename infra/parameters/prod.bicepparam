@@ -4,7 +4,7 @@ using '../main.bicep'
 // Production Environment Parameters
 // Follows Azure Well-Architected Framework (WAF):
 //   - Reliability: Multi-replica search, GRS storage
-//   - Security: Network isolation, private endpoints, purge protection
+//   - Security: Identity/policy-based isolation (APIM Consumption, no VNet), purge protection
 //   - Operational Excellence: Extended log retention, monitoring
 //   - Performance: Standard-tier services with appropriate capacity
 // ============================================================================
@@ -17,6 +17,11 @@ param baseName = 'mydealer'
 param deployAppService = true
 param deployApim = true
 param deployDocumentIntelligence = true
+
+// APIM JWT validation — audience (Entra app / API GUID). Leave '' to deploy
+// without enforcement until the dealer-portal app registration exists, then set
+// to the API's application (client) ID to enforce validate-jwt at the gateway.
+param apimJwtAudience = ''
 
 // AI Models - Higher capacity for production traffic
 param openAiModelDeployment = 'gpt-5'
@@ -37,9 +42,12 @@ param searchIndexName = 'dealer-portal-docs'
 // Storage - GRS for production geo-redundancy
 param storageSkuName = 'Standard_GRS'
 
-// Networking - Full isolation with VNet + private endpoints
-param useNetworkIsolation = true
-param publicNetworkAccess = 'Disabled'
+// Networking - APIM Consumption tier (D9 / PLATFORM-STANDARDS §3 + ADR-001):
+// public gateway, no VNet/private endpoints. Backend protection is delivered by
+// APIM policy (JWT validation, rate limiting), Managed Identity, and Key Vault
+// credential injection rather than network isolation.
+param useNetworkIsolation = false
+param publicNetworkAccess = 'Enabled'
 
 // Key Vault - Strict for production
 param enablePurgeProtection = true

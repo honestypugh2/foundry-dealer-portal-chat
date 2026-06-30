@@ -27,10 +27,10 @@ main.bicep                    # Orchestrator — wires all modules together
 | Aspect | Dev | Prod |
 |--------|-----|------|
 | App Service | Not deployed (run locally) | P1v3 / PremiumV3 |
-| APIM | Not deployed | Developer tier |
+| APIM | Not deployed | Consumption tier (public) |
 | AI Search | Basic, 1 replica | Standard, 2 replicas (HA) |
 | Storage | Standard_LRS | Standard_GRS |
-| Network | Public access enabled | VNet + private endpoints |
+| Network | Public access enabled | Public (identity/policy isolation, no VNet) |
 | Key Vault | No purge protection, 7d soft-delete | Purge protection, 90d soft-delete |
 | OpenAI capacity | 30K TPM | 80K TPM |
 | Log retention | 30 days | 90 days |

@@ -27,6 +27,9 @@ param deployAppService bool = false
 @description('Deploy APIM (production API gateway). Requires deployAppService = true.')
 param deployApim bool = false
 
+@description('Audience (Entra app / API GUID) for APIM validate-jwt. Empty disables JWT enforcement.')
+param apimJwtAudience string = ''
+
 @description('Azure OpenAI model deployment name')
 param openAiModelDeployment string = 'gpt-5'
 
@@ -209,6 +212,9 @@ module apim 'modules/apim.bicep' = if (deployApim && deployAppService) {
     backendUrl: appservice!.outputs.appServiceUrl
     appInsightsInstrumentationKey: monitoring.outputs.appInsightsInstrumentationKey
     logAnalyticsWorkspaceId: monitoring.outputs.logAnalyticsWorkspaceId
+    jwtOpenIdConfigUrl: empty(apimJwtAudience) ? '' : '${az.environment().authentication.loginEndpoint}${tenant().tenantId}/v2.0/.well-known/openid-configuration'
+    jwtAudience: apimJwtAudience
+    allowedCorsOrigins: split(corsOrigins, ',')
   }
 }
 

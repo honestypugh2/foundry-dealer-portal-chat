@@ -4,8 +4,8 @@
   "metadata": {
     "_generator": {
       "name": "bicep",
-      "version": "0.42.1.51946",
-      "templateHash": "6128552487641509240"
+      "version": "0.43.8.12551",
+      "templateHash": "10558731565091383464"
     }
   },
   "parameters": {
@@ -47,6 +47,13 @@
       "defaultValue": false,
       "metadata": {
         "description": "Deploy APIM (production API gateway). Requires deployAppService = true."
+      }
+    },
+    "apimJwtAudience": {
+      "type": "string",
+      "defaultValue": "",
+      "metadata": {
+        "description": "Audience (Entra app / API GUID) for APIM validate-jwt. Empty disables JWT enforcement."
       }
     },
     "openAiModelDeployment": {
@@ -259,8 +266,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "16035013648910400966"
+              "version": "0.43.8.12551",
+              "templateHash": "4854654771994188553"
             }
           },
           "parameters": {
@@ -363,8 +370,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "16995971767490516868"
+              "version": "0.43.8.12551",
+              "templateHash": "9814459394716486537"
             }
           },
           "parameters": {
@@ -451,6 +458,28 @@
             {
               "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
               "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', 'sharepoint-docs')]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccountName'), 'default')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2023-05-01",
+              "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', 'revver-docs')]",
+              "properties": {
+                "publicAccess": "None"
+              },
+              "dependsOn": [
+                "[resourceId('Microsoft.Storage/storageAccounts/blobServices', variables('storageAccountName'), 'default')]"
+              ]
+            },
+            {
+              "type": "Microsoft.Storage/storageAccounts/blobServices/containers",
+              "apiVersion": "2023-05-01",
               "name": "[format('{0}/{1}/{2}', variables('storageAccountName'), 'default', 'document-chunks')]",
               "properties": {
                 "publicAccess": "None"
@@ -510,8 +539,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "3233063102754887624"
+              "version": "0.43.8.12551",
+              "templateHash": "6866110356640261853"
             }
           },
           "parameters": {
@@ -658,8 +687,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "1091556031254087079"
+              "version": "0.43.8.12551",
+              "templateHash": "8757883250280570182"
             }
           },
           "parameters": {
@@ -983,8 +1012,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "3119316463924254587"
+              "version": "0.43.8.12551",
+              "templateHash": "6544722880083683148"
             }
           },
           "parameters": {
@@ -1107,8 +1136,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "12597965831631279206"
+              "version": "0.43.8.12551",
+              "templateHash": "7175632032518621493"
             }
           },
           "parameters": {
@@ -1235,8 +1264,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "17957202244029371609"
+              "version": "0.43.8.12551",
+              "templateHash": "14800886134667446029"
             }
           },
           "parameters": {
@@ -1443,6 +1472,13 @@
           },
           "logAnalyticsWorkspaceId": {
             "value": "[reference(resourceId('Microsoft.Resources/deployments', format('monitoring-{0}', variables('resourceSuffix'))), '2025-04-01').outputs.logAnalyticsWorkspaceId.value]"
+          },
+          "jwtOpenIdConfigUrl": "[if(empty(parameters('apimJwtAudience')), createObject('value', ''), createObject('value', format('{0}{1}/v2.0/.well-known/openid-configuration', environment().authentication.loginEndpoint, tenant().tenantId)))]",
+          "jwtAudience": {
+            "value": "[parameters('apimJwtAudience')]"
+          },
+          "allowedCorsOrigins": {
+            "value": "[split(parameters('corsOrigins'), ',')]"
           }
         },
         "template": {
@@ -1451,8 +1487,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "12691760405908465881"
+              "version": "0.43.8.12551",
+              "templateHash": "3401470489918235042"
             }
           },
           "parameters": {
@@ -1470,7 +1506,34 @@
             },
             "logAnalyticsWorkspaceId": {
               "type": "string"
+            },
+            "jwtOpenIdConfigUrl": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "OpenID configuration URL used by validate-jwt. Empty disables JWT enforcement."
+              }
+            },
+            "jwtAudience": {
+              "type": "string",
+              "defaultValue": "",
+              "metadata": {
+                "description": "Expected audience (Entra app / API GUID) for validate-jwt. Empty disables JWT enforcement."
+              }
+            },
+            "allowedCorsOrigins": {
+              "type": "array",
+              "defaultValue": [],
+              "metadata": {
+                "description": "Allowed CORS origins for the dealer API. Empty falls back to localhost dev origin."
+              }
             }
+          },
+          "variables": {
+            "corsOriginsXml": "[if(empty(parameters('allowedCorsOrigins')), '<origin>http://localhost:5173</origin>', join(map(parameters('allowedCorsOrigins'), lambda('origin', format('<origin>{0}</origin>', trim(lambdaVariables('origin'))))), '\n        '))]",
+            "validateJwtXml": "[if(empty(parameters('jwtAudience')), '<!-- validate-jwt disabled: set apimJwtAudience to enable enforcement -->', format('<validate-jwt header-name=\"Authorization\" failed-validation-httpcode=\"401\" failed-validation-error-message=\"Unauthorized\">\n      <openid-config url=\"{0}\" />\n      <audiences>\n        <audience>{1}</audience>\n      </audiences>\n    </validate-jwt>', parameters('jwtOpenIdConfigUrl'), parameters('jwtAudience')))]",
+            "dealerApiPolicyTemplate": "<policies>\n  <inbound>\n    <base />\n    <cors allow-credentials=\"true\">\n      <allowed-origins>\n        __CORS_ORIGINS__\n      </allowed-origins>\n      <allowed-methods>\n        <method>GET</method>\n        <method>POST</method>\n        <method>OPTIONS</method>\n      </allowed-methods>\n      <allowed-headers>\n        <header>*</header>\n      </allowed-headers>\n    </cors>\n    __VALIDATE_JWT__\n    <rate-limit-by-key calls=\"100\" renewal-period=\"60\" counter-key=\"@(context.Subscription?.Id ?? context.Request.IpAddress)\" />\n    <set-backend-service backend-id=\"fastapi-backend\" />\n    <set-header name=\"X-Caller-Identity\" exists-action=\"override\">\n      <value>@(context.Request.Headers.GetValueOrDefault(\"Authorization\",\"\").Replace(\"Bearer \",\"\").AsJwt()?.Subject)</value>\n    </set-header>\n    <set-header name=\"X-Dealer-Code\" exists-action=\"override\">\n      <value>@{\n        var jwt = context.Request.Headers.GetValueOrDefault(\"Authorization\",\"\").Replace(\"Bearer \",\"\").AsJwt();\n        return jwt?.Claims.GetValueOrDefault(\"dealer_code\", new string[0]).FirstOrDefault() ?? \"\";\n      }</value>\n    </set-header>\n    <set-header name=\"X-User-Id\" exists-action=\"override\">\n      <value>@{\n        var jwt = context.Request.Headers.GetValueOrDefault(\"Authorization\",\"\").Replace(\"Bearer \",\"\").AsJwt();\n        return jwt?.Claims.GetValueOrDefault(\"sub\", new string[0]).FirstOrDefault() ?? \"\";\n      }</value>\n    </set-header>\n    <set-header name=\"X-User-Roles\" exists-action=\"override\">\n      <value>@{\n        var jwt = context.Request.Headers.GetValueOrDefault(\"Authorization\",\"\").Replace(\"Bearer \",\"\").AsJwt();\n        return jwt == null ? \"\" : string.Join(\",\", jwt.Claims.GetValueOrDefault(\"roles\", new string[0]));\n      }</value>\n    </set-header>\n  </inbound>\n  <backend>\n    <base />\n  </backend>\n  <outbound>\n    <base />\n  </outbound>\n  <on-error>\n    <base />\n  </on-error>\n</policies>\n",
+            "dealerApiPolicyXml": "[replace(replace(variables('dealerApiPolicyTemplate'), '__CORS_ORIGINS__', variables('corsOriginsXml')), '__VALIDATE_JWT__', variables('validateJwtXml'))]"
           },
           "resources": [
             {
@@ -1479,8 +1542,8 @@
               "name": "[format('apim-{0}', parameters('baseName'))]",
               "location": "[parameters('location')]",
               "sku": {
-                "name": "Developer",
-                "capacity": 1
+                "name": "Consumption",
+                "capacity": 0
               },
               "properties": {
                 "publisherEmail": "admin@company-dealer-portal.com",
@@ -1603,7 +1666,7 @@
               "name": "[format('{0}/{1}/{2}', format('apim-{0}', parameters('baseName')), 'company-dealer-api', 'policy')]",
               "properties": {
                 "format": "xml",
-                "value": "<policies>\n  <inbound>\n    <base />\n    <rate-limit calls=\"100\" renewal-period=\"60\" />\n    <set-backend-service backend-id=\"fastapi-backend\" />\n    <cors>\n      <allowed-origins>\n        <origin>*</origin>\n      </allowed-origins>\n      <allowed-methods>\n        <method>GET</method>\n        <method>POST</method>\n        <method>OPTIONS</method>\n      </allowed-methods>\n      <allowed-headers>\n        <header>*</header>\n      </allowed-headers>\n    </cors>\n  </inbound>\n  <backend>\n    <base />\n  </backend>\n  <outbound>\n    <base />\n  </outbound>\n  <on-error>\n    <base />\n  </on-error>\n</policies>\n"
+                "value": "[variables('dealerApiPolicyXml')]"
               },
               "dependsOn": [
                 "[resourceId('Microsoft.ApiManagement/service/apis', format('apim-{0}', parameters('baseName')), 'company-dealer-api')]"
@@ -1662,8 +1725,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "8917690557199005832"
+              "version": "0.43.8.12551",
+              "templateHash": "8580155647090619343"
             }
           },
           "parameters": {
@@ -2127,8 +2190,8 @@
           "metadata": {
             "_generator": {
               "name": "bicep",
-              "version": "0.42.1.51946",
-              "templateHash": "13442515488780691869"
+              "version": "0.43.8.12551",
+              "templateHash": "16966204763172011250"
             }
           },
           "parameters": {
